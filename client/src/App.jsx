@@ -3,20 +3,35 @@ import {
   Routes,
   Route,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import { useAuth } from "./utils/AuthContext";
+import Navbar from "./components/Navbar";
+import Invoice from "./pages/Invoice";
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = () => {
+  const { user } = useAuth();
   const accessToken = localStorage.getItem("accessToken");
-  const refreshToken = localStorage.getItem("refreshToken");
 
-  if (!accessToken && !refreshToken) {
+  if (!user && !accessToken) {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
+  return <Outlet />;
+};
+
+const ProtectedLayout = () => {
+  return (
+    <>
+      <Navbar />
+      <div>
+        <Outlet />
+      </div>
+    </>
+  );
 };
 
 function App() {
@@ -25,22 +40,13 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
+        <Route element={<PrivateRoute />}>
+          <Route element={<ProtectedLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/invoice" element={<Invoice />} />
+          </Route>
+        </Route>
       </Routes>
     </Router>
   );

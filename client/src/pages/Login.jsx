@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../utils/axios";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,28 +13,12 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Login failed");
-        return;
-      }
-
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
-
+      const res = await API.post("/auth/login", { email, password });
+      localStorage.setItem("accessToken", res.data.accessToken);
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
-      setError("Something went wrong");
+      setError(err?.response?.data?.message || "Login failed");
     }
   };
   return (

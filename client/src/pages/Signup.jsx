@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../utils/axios";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -21,25 +22,12 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("Signup successful!");
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        navigate("/dashboard");
-      } else {
-        setMessage(`${data.message || "Signup failed!"}`);
-      }
+      const res = await API.post("/auth/signup", formData);
+      localStorage.setItem("accessToken", res.data.accessToken);
+      navigate("/dashboard");
     } catch (err) {
-      console.log("Error", err);
-      setMessage("Something went wrong!");
+      console.log("Signup Error", err);
+      setMessage(err.response?.data?.message || "Signup failed");
     }
   };
 

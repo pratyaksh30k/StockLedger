@@ -79,6 +79,28 @@ router.post("/login", async (req, res) => {
   }
 });
 
+router.post("/logout", async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token required" });
+    }
+
+    const user = await User.findOne({ refreshToken });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid refresh token" });
+    }
+
+    user.refreshToken = null;
+    await user.save();
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (err) {
+    console.error("Logout error:", err);
+    res.status(500).json({ message: "Server error during logout" });
+  }
+});
+
 router.post("/refresh", (req, res) => {
   const { refreshToken } = req.body;
 
@@ -100,17 +122,6 @@ router.post("/refresh", (req, res) => {
     return res
       .status(403)
       .json({ message: "Invalid or expired refresh token" });
-  }
-});
-
-router.get("/dashboard", verifyToken, async (req, res) => {
-  try {
-    res.json({
-      message: "Welcome to your dashboard!",
-      user: req.user,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching dashboard" });
   }
 });
 
