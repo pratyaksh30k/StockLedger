@@ -10,6 +10,7 @@ const StockModal = ({ isOpen, onClose, onSubmit, initialData = {}, mode }) => {
     purchasingPrice: "",
     sellingPrice: "",
     quantity: "",
+    type: "Mobile",
   });
 
   useEffect(() => {
@@ -19,6 +20,7 @@ const StockModal = ({ isOpen, onClose, onSubmit, initialData = {}, mode }) => {
         purchasingPrice: initialData.purchasingPrice || "",
         sellingPrice: initialData.sellingPrice || "",
         quantity: initialData.quantity || "",
+        type: initialData.type || "",
       });
     } else {
       setFormData({
@@ -26,6 +28,7 @@ const StockModal = ({ isOpen, onClose, onSubmit, initialData = {}, mode }) => {
         purchasingPrice: "",
         sellingPrice: "",
         quantity: "",
+        type: "Mobile",
       });
     }
   }, [initialData, isOpen]);
@@ -83,6 +86,16 @@ const StockModal = ({ isOpen, onClose, onSubmit, initialData = {}, mode }) => {
             className="w-full border rounded px-3 py-2"
           />
 
+          <select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+          >
+            <option value="Mobile">Mobile</option>
+            <option value="Accessory">Accessory</option>
+          </select>
+
           <div className="flex justify-end gap-3">
             <button
               type="button"
@@ -111,7 +124,7 @@ const Dashboard = () => {
   const [items, setItems] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // 🔎 Search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddStock = () => {
     setEditItem(null);
@@ -120,37 +133,50 @@ const Dashboard = () => {
 
   const handleEditStock = (item) => {
     setEditItem(item);
+    console.log(item);
     setIsModalOpen(true);
   };
 
-  const handleDeleteStock = (id) => {
-    setItems(items.filter((item) => item.id !== id));
+  const handleDeleteStock = async (id) => {
+    try {
+      await API.delete(`/stocks/deleteStock/${id}`);
+      setItems(items?.filter((item) => item._id !== id));
+      console.log("Stock deleted successfully");
+    } catch (err) {
+      console.error("Error deleting stock:", err);
+    }
   };
 
-  const handleSaveStock = (data) => {
+  const handleSaveStock = async (data) => {
     if (editItem) {
-      // update
+
+      const res = await API.put(`/stocks/editStock/${editItem._id}`, data);
       setItems(
-        items.map((item) =>
-          item.id === editItem.id ? { ...item, ...data } : item
-        )
+        items?.map((item) => (item._id === editItem._id ? res.data : item))
       );
+      console.log(`Stock updated successfully with id: ${editItem._id}`);
     } else {
-      // add new
-      setItems([...items, { ...data, id: Date.now() }]);
+      const res = await API.post("/stocks/addStock", data);
+      setItems([res.data, ...items]);
+      console.log("Stock added successfully with id:", res.data.stock._id);
     }
     setIsModalOpen(false);
   };
 
-  // 🔎 Filter items based on searchQuery
-  const filteredItems = items.filter((item) =>
-    item.productName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredItems = items?.filter((item) => {
+    const name = item.productName ? item.productName.toLowerCase() : "";
+    const type = item.type ? item.type.toLowerCase() : "";
+    const query = searchQuery.toLowerCase();
+
+    return name.includes(query) || type.includes(query);
+  });
 
   const fetchDashboard = async () => {
     try {
       const res = await API.get("/user/dashboard");
       setUser(res.data.user);
+      const stockRes = await API.get("/stocks/getStocks");
+      setItems(stockRes.data);
     } catch (err) {
       console.error("Dashboard fetch error:", err);
       navigate("/login");
@@ -159,7 +185,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboard();
-  }, [navigate]);
+  }, [items, isModalOpen]);
 
   if (!user) {
     return <p className="text-center mt-10">Loading...</p>;
@@ -195,37 +221,41 @@ const Dashboard = () => {
               <th className="py-2">Purchasing Price</th>
               <th className="py-2">Selling Price</th>
               <th className="py-2">Quantity</th>
+              <th className="py-2">Type</th>
               <th className="py-2">Date</th>
               <th className="py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredItems.map((item) => (
-              <tr key={item.id} className="border-b">
+            {filteredItems?.map((item, index) => (
+              <tr key={item._id || item.id || index} className="border-b">
                 <td className="p-2 font-semibold">{item.productName}</td>
                 <td className="p-2">{item.purchasingPrice}</td>
                 <td className="p-2">{item.sellingPrice}</td>
                 <td className="p-2">{item.quantity}</td>
+                <td className="p-2">{item.type}</td>
                 <td className="p-2">
-                  {new Date(item.id).toLocaleDateString()}
+                  {item.createdAt
+                    ? new Date(item.createdAt).toLocaleDateString()
+                    : ""}
                 </td>
                 <td className="p-2 flex gap-2">
                   <button
                     className="cursor-pointer text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg"
                     onClick={() => handleEditStock(item)}
                   >
-                    <LiaEdit size={25}/>
+                    <LiaEdit size={25} />
                   </button>
                   <button
                     className="text-red-500 hover:text-red-700 px-4 py-2 rounded-lg cursor-pointer"
-                    onClick={() => handleDeleteStock(item.id)}
+                    onClick={() => handleDeleteStock(item._id || item.id)}
                   >
-                    <AiOutlineDelete size={25}/>
+                    <AiOutlineDelete size={25} />
                   </button>
                 </td>
               </tr>
             ))}
-            {filteredItems.length === 0 && (
+            {filteredItems?.length === 0 && (
               <tr>
                 <td colSpan="6" className="text-center p-4 text-gray-500">
                   No items found

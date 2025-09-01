@@ -2,7 +2,6 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.models.js";
-import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -10,7 +9,7 @@ const generateTokens = (user) => {
   const accessToken = jwt.sign(
     { id: user._id, email: user.email },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "1d" }
   );
 
   const refreshToken = jwt.sign(
@@ -36,13 +35,23 @@ router.post("/signup", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({ companyName, email, password: hashedPassword });
-    await newUser.save();
 
     const { accessToken, refreshToken } = generateTokens(newUser);
 
-    res
-      .status(201)
-      .json({ message: "Signup successful", accessToken, refreshToken });
+    newUser.refreshToken = refreshToken;
+
+    await newUser.save();
+
+    res.status(201).json({
+      message: "Signup successful",
+      user: {
+        id: newUser._id,
+        companyName: newUser.companyName,
+        email: newUser.email,
+      },
+      accessToken,
+      refreshToken,
+    });
   } catch (err) {
     console.log("Signup failed", err);
     res.status(500).json({ message: "Signup failed" });
@@ -66,10 +75,17 @@ router.post("/login", async (req, res) => {
 
     const { accessToken, refreshToken } = generateTokens(user);
 
+    user.refreshToken = refreshToken;
+
     await user.save();
 
     res.json({
       message: "Login successful",
+      user: {
+        id: user._id,
+        companyName: user.companyName,
+        email: user.email,
+      },
       accessToken,
       refreshToken,
     });
@@ -101,7 +117,7 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-router.post("/refresh", (req, res) => {
+router.post("/refresh", async (req, res) => {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
@@ -110,14 +126,20 @@ router.post("/refresh", (req, res) => {
 
   try {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id);
 
-    const accessToken = jwt.sign(
-      { id: decoded.id, email: decoded.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    if (!user || user.refreshToken !== refreshToken) {
+      return res
+        .status(403)
+        .json({ message: "Invalid or expired refresh token" });
+    }
 
-    res.json({ accessToken });
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
+
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    res.json({ accessToken, refreshToken: newRefreshToken });
   } catch (err) {
     return res
       .status(403)

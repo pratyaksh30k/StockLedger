@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../utils/axios";
+import { useAuth } from "../utils/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,7 +16,8 @@ const Login = () => {
 
     try {
       const res = await API.post("/auth/login", { email, password });
-      localStorage.setItem("accessToken", res.data.accessToken);
+
+      login(res.data);
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err);

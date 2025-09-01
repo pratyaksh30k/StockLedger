@@ -8,15 +8,11 @@ import {
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import { useAuth } from "./utils/AuthContext";
 import Navbar from "./components/Navbar";
 import Invoice from "./pages/Invoice";
 
 const PrivateRoute = () => {
-  const { user } = useAuth();
-  const accessToken = localStorage.getItem("accessToken");
-
-  if (!user && !accessToken) {
+  if (localStorage.getItem("accessToken") === null) {
     return <Navigate to="/login" replace />;
   }
 

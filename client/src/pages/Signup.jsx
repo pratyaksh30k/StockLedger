@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../utils/axios";
+import { useAuth } from "../utils/AuthContext";
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     companyName: "",
     email: "",
@@ -23,7 +25,7 @@ const Signup = () => {
     e.preventDefault();
     try {
       const res = await API.post("/auth/signup", formData);
-      localStorage.setItem("accessToken", res.data.accessToken);
+      login(res.data);
       navigate("/dashboard");
     } catch (err) {
       console.log("Signup Error", err);

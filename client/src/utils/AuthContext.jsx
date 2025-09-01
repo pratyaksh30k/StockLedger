@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import API from "./axios.js";
 
 const AuthContext = createContext();
 
@@ -6,24 +7,54 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken");
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
     const refreshToken = localStorage.getItem("refreshToken");
+    if (refreshToken) {
+      API.post("/auth/refresh", { refreshToken })
+        .then((res) => {
+          const { accessToken, refreshToken: newRefreshToken } = res.data;
 
-    if (accessToken && refreshToken) {
-      setUser({ accessToken, refreshToken });
+          localStorage.setItem("accessToken", accessToken);
+          localStorage.setItem("refreshToken", newRefreshToken);
+
+          setUser((prev) =>
+            prev
+              ? { ...prev, accessToken, refreshToken: newRefreshToken }
+              : prev
+          );
+        })
+        .catch((err) => {
+          console.error("Refresh token error:", err);
+          logout();
+        });
     }
   }, []);
 
-  const login = (userData, accessToken, refreshToken) => {
+  const login = (data) => {
+    const { accessToken, refreshToken, user } = data;
+
+    const userData = {
+      id: user.id,
+      companyName: user.companyName,
+      email: user.email,
+      accessToken,
+      refreshToken,
+    };
+
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
-    setUser({ ...userData, accessToken, refreshToken });
   };
 
   const logout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    setUser(null);
   };
 
   return (

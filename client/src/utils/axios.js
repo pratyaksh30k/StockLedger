@@ -10,7 +10,7 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-API.interceptors.request.use(
+API.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
@@ -25,8 +25,20 @@ API.interceptors.request.use(
         const res = await axios.post("http://localhost:5000/api/auth/refresh", {
           refreshToken,
         });
-        const newAccessToken = res.data.accessToken;
-        localStorage.setItem("accessToken", newAccessToken);
+        const { accessToken, refreshToken: newRefreshToken } = res.data;
+
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", newRefreshToken);
+
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...storedUser,
+            accessToken,
+            refreshToken: newRefreshToken,
+          })
+        );
         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         return API(originalRequest);
       } catch (error) {
