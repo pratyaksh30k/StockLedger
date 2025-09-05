@@ -2,6 +2,9 @@ import axios from "axios";
 
 const API = axios.create({
   baseURL: "http://localhost:5000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 API.interceptors.request.use((config) => {
@@ -39,7 +42,7 @@ API.interceptors.response.use(
             refreshToken: newRefreshToken,
           })
         );
-        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
         return API(originalRequest);
       } catch (error) {
         localStorage.removeItem("accessToken");

@@ -138,6 +138,13 @@ const Dashboard = () => {
   };
 
   const handleDeleteStock = async (id) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this item? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
     try {
       await API.delete(`/stocks/deleteStock/${id}`);
       setItems(items?.filter((item) => item._id !== id));
@@ -149,15 +156,16 @@ const Dashboard = () => {
 
   const handleSaveStock = async (data) => {
     if (editItem) {
-
       const res = await API.put(`/stocks/editStock/${editItem._id}`, data);
       setItems(
-        items?.map((item) => (item._id === editItem._id ? res.data : item))
+        items?.map((item) =>
+          item._id === editItem._id ? res.data.stock : item
+        )
       );
       console.log(`Stock updated successfully with id: ${editItem._id}`);
     } else {
       const res = await API.post("/stocks/addStock", data);
-      setItems([res.data, ...items]);
+      setItems([res.data.stock, ...items]);
       console.log("Stock added successfully with id:", res.data.stock._id);
     }
     setIsModalOpen(false);
@@ -185,7 +193,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboard();
-  }, [items, isModalOpen]);
+  }, []);
 
   if (!user) {
     return <p className="text-center mt-10">Loading...</p>;
@@ -197,7 +205,7 @@ const Dashboard = () => {
         <div className="text-2xl font-bold">Stock Management</div>
         <button
           onClick={handleAddStock}
-          className="cursor-pointer border border-black bg-black text-white p-2 rounded-lg"
+          className="cursor-pointer bg-blue-700 text-white p-2 rounded-lg"
         >
           Add Stock
         </button>
@@ -241,7 +249,7 @@ const Dashboard = () => {
                 </td>
                 <td className="p-2 flex gap-2">
                   <button
-                    className="cursor-pointer text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg"
+                    className="cursor-pointer text-black hover:text-gray-700 px-4 py-2 rounded-lg"
                     onClick={() => handleEditStock(item)}
                   >
                     <LiaEdit size={25} />

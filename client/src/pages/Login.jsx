@@ -16,7 +16,6 @@ const Login = () => {
 
     try {
       const res = await API.post("/auth/login", { email, password });
-
       login(res.data);
       navigate("/dashboard");
     } catch (err) {
@@ -26,7 +25,7 @@ const Login = () => {
   };
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <div className="flex flex-col border border-black p-4 w-[30%] rounded-lg">
+      <div className="flex flex-col border border-black p-4 w-full lg:w-[40%] rounded-lg">
         <div className="text-2xl font-bold text-center mb-4">Login</div>
         <form className="flex flex-col" onSubmit={handleLogin}>
           <label className="font-semibold opacity-80 mb-1" htmlFor="email">

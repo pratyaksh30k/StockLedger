@@ -6,7 +6,25 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    address: {
+      type: String,
+      required: true,
+    },
     email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    primaryNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    alternateNumber: {
+      type: String,
+      required: false,
+    },
+    gstNumber: {
       type: String,
       required: true,
       unique: true,

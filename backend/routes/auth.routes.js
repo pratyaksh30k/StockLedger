@@ -9,7 +9,7 @@ const generateTokens = (user) => {
   const accessToken = jwt.sign(
     { id: user._id, email: user.email },
     process.env.JWT_SECRET,
-    { expiresIn: "1d" }
+    { expiresIn: "15m" }
   );
 
   const refreshToken = jwt.sign(
@@ -23,23 +23,48 @@ const generateTokens = (user) => {
 
 router.post("/signup", async (req, res) => {
   try {
-    const { companyName, email, password } = req.body;
-    if (!companyName || !email || !password) {
+    const {
+      companyName,
+      address,
+      email,
+      primaryNumber,
+      gstNumber,
+      password,
+      alternateNumber,
+    } = req.body;
+    if (
+      !companyName ||
+      !address ||
+      !primaryNumber ||
+      !gstNumber ||
+      !email ||
+      !password
+    ) {
       return res.status(400).json({ message: "All fields are required" });
     }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({ companyName, email, password: hashedPassword });
+    const newUser = new User({
+      companyName,
+      address,
+      email,
+      primaryNumber,
+      alternateNumber,
+      gstNumber,
+      password: hashedPassword,
+    });
+
+    await newUser.save();
 
     const { accessToken, refreshToken } = generateTokens(newUser);
-
     newUser.refreshToken = refreshToken;
-
     await newUser.save();
 
     res.status(201).json({
@@ -47,7 +72,11 @@ router.post("/signup", async (req, res) => {
       user: {
         id: newUser._id,
         companyName: newUser.companyName,
+        address: newUser.address,
         email: newUser.email,
+        primaryNumber: newUser.primaryNumber,
+        alternateNumber: newUser.alternateNumber,
+        gstNumber: newUser.gstNumber,
       },
       accessToken,
       refreshToken,
@@ -84,7 +113,10 @@ router.post("/login", async (req, res) => {
       user: {
         id: user._id,
         companyName: user.companyName,
+        address: user.address,
         email: user.email,
+        primaryNumber: user.primaryNumber,
+        gstNumber: user.gstNumber,
       },
       accessToken,
       refreshToken,
@@ -128,7 +160,7 @@ router.post("/refresh", async (req, res) => {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.id);
 
-    if (!user || user.refreshToken !== refreshToken) {
+    if (!user) {
       return res
         .status(403)
         .json({ message: "Invalid or expired refresh token" });

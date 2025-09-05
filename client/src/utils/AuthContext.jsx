@@ -27,7 +27,10 @@ export const AuthProvider = ({ children }) => {
           );
         })
         .catch((err) => {
-          console.error("Refresh token error:", err);
+          console.error(
+            "Refresh token error:",
+            err.message || err.response?.data
+          );
           logout();
         });
     }
@@ -39,7 +42,11 @@ export const AuthProvider = ({ children }) => {
     const userData = {
       id: user.id,
       companyName: user.companyName,
+      address: user.address,
       email: user.email,
+      primaryNumber: user.primaryNumber,
+      alternateNumber: user.alternateNumber,
+      gstNumber: user.gstNumber,
       accessToken,
       refreshToken,
     };

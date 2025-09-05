@@ -8,6 +8,10 @@ const Signup = () => {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     companyName: "",
+    address: "",
+    primaryNumber: "",
+    alternateNumber: "",
+    gstNumber: "",
     email: "",
     password: "",
   });
@@ -22,6 +26,7 @@ const Signup = () => {
   };
 
   const handleSubmit = async (e) => {
+    console.log(formData);
     e.preventDefault();
     try {
       const res = await API.post("/auth/signup", formData);
@@ -35,7 +40,7 @@ const Signup = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen">
-      <div className="flex flex-col border border-black p-4 w-[30%] rounded-lg">
+      <div className="flex flex-col border border-black p-4 lg:w-[40%] rounded-lg w-[80%]">
         <div className="text-2xl font-bold text-center mb-4">Signup</div>
         <form className="flex flex-col" onSubmit={handleSubmit}>
           <label
@@ -53,6 +58,18 @@ const Signup = () => {
             value={formData.companyName}
             onChange={handleChange}
           />
+          <label className="font-semibold opacity-80 mb-1" htmlFor="address">
+            Address:
+          </label>
+          <textarea
+            className="border border-black mb-2 p-1 rounded-lg"
+            type="text"
+            name="address"
+            id="address"
+            placeholder="Enter your address"
+            value={formData.address}
+            onChange={handleChange}
+          />
           <label className="font-semibold opacity-80 mb-1" htmlFor="email">
             Email:
           </label>
@@ -63,6 +80,48 @@ const Signup = () => {
             id="email"
             placeholder="Enter your email"
             value={formData.email}
+            onChange={handleChange}
+          />
+          <label
+            className="font-semibold opacity-80 mb-1"
+            htmlFor="primaryNumber"
+          >
+            Mobile Number:
+          </label>
+          <input
+            className="border border-black mb-2 p-1 rounded-lg"
+            type="number"
+            name="primaryNumber"
+            id="primaryNumber"
+            placeholder="Enter your number"
+            value={formData.primaryNumber}
+            onChange={handleChange}
+          />
+          <label
+            className="font-semibold opacity-80 mb-1"
+            htmlFor="alternateNumber"
+          >
+            Alternate Mobile Number (optional):
+          </label>
+          <input
+            className="border border-black mb-2 p-1 rounded-lg"
+            type="number"
+            name="alternateNumber"
+            id="alternateNumber"
+            placeholder="Enter your number"
+            value={formData.alternateNumber}
+            onChange={handleChange}
+          />
+          <label className="font-semibold opacity-80 mb-1" htmlFor="gstNumber">
+            GST Number:
+          </label>
+          <input
+            className="border border-black mb-2 p-1 rounded-lg"
+            type="text"
+            name="gstNumber"
+            id="gstNumber"
+            placeholder="Enter your gst number"
+            value={formData.gstNumber}
             onChange={handleChange}
           />
           <label className="font-semibold opacity-80 mb-1" htmlFor="password">
