@@ -335,7 +335,7 @@ const Invoice = () => {
               <p className="font-bold text-lg">{user?.companyName}</p>
               <p className="text-sm">{user?.address}</p>
               <p className="text-sm">
-                Phone No.: {user?.primaryNumber} {", " && user?.alternateNumber}
+                Phone No.: {user?.primaryNumber} , {user?.alternateNumber}
               </p>
             </div>
             <div className="flex flex-col gap-2 p-4">
@@ -499,7 +499,7 @@ const Invoice = () => {
               <p className="font-bold text-lg">{user?.companyName}</p>
               <p className="text-sm">{user?.address}</p>
               <p className="text-sm">
-                Phone No.: {user?.primaryNumber} {", " && user?.alternateNumber}
+                Phone No.: {user?.primaryNumber} , {user?.alternateNumber}
               </p>
             </div>
             <div className="flex flex-col gap-2 p-4">
